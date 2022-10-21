@@ -1,6 +1,6 @@
-// #define PUERTO_SALIDA_DEFECTO 8
-// #define PUERTO_LOG_DEFECTO 1
-// #define ENTRADA 22
+#define PUERTO_SALIDA_DEFECTO 8
+#define PUERTO_LOG_DEFECTO 1
+#define ENTRADA 22
 
 #include <stdio.h>
 
@@ -12,12 +12,11 @@ short in(short port)
 }
 void out(short port, short val)
 {
-    // printf("Puerto %n, estado:%n \n", &port, &val);
 }
 
 short fact(short n)
 {
-    if (n > 0)
+    if (n > 1)
         return n * fact(n - 1);
     else
         return 1;
@@ -25,82 +24,74 @@ short fact(short n)
 
 int main()
 {
-    short PUERTO_SALIDA_DEFECTO = 8;
-    short PUERTO_LOG_DEFECTO = 1;
-    short ENTRADA = 22;
+    short port_exit = PUERTO_SALIDA_DEFECTO;
+    short port_logs = PUERTO_LOG_DEFECTO;
 
     short MEM[31]; // simulo la pila en memoria como un arreglo
     for (short i = 0; i < 31; i++)
         MEM[i] = 0;
 
     short posPila = -1;
+
     short cod = in(ENTRADA);
     while (cod != 255)
     {
-        /* FALTA
-        mandar el código 0 seguido del comando a procesar (incluyendo
-        los parámetros, una palabra por cada dato)
-
-        ej:
-        si quiero hacer la suma seria:
-        out(PUERTO_SALIDA_DEFECTO,0);
-        out(PUERTO_SALIDA_DEFECTO,n2);
-        out(PUERTO_SALIDA_DEFECTO,11 "codigo de la op");
-        out(PUERTO_SALIDA_DEFECTO,n1);
-        ??????????????????
-        */
+        out(port_logs, 0);
+        out(port_logs, cod); // mando a la bitacora: 0 'cod_operacion'
 
         if (cod == 1) // inserto nro a la pila
         {
             short dato = in(ENTRADA); // recordar pasar a complemento a 2
+            out(port_logs, dato);     // mando a la bitacora el parametro
+
             if (posPila < 30)
             {
                 posPila++;
                 MEM[posPila] = dato;
-                out(PUERTO_LOG_DEFECTO, 16); // op realiada con exito
+                out(port_logs, 16); // op realiada con exito
             }
             else
             {
-                out(PUERTO_LOG_DEFECTO, 4); // error stack overflow
+                out(port_logs, 4); // error desbordamiento de la pila
             }
         }
         else if (cod == 2) // seteo el puerto de salida
         {
             short dato = in(ENTRADA);
+            out(port_logs, dato); // mando a la bitacora el parametro
+
             PUERTO_SALIDA_DEFECTO = dato;
-            out(PUERTO_LOG_DEFECTO, 16); // op realiada con exito
+            out(port_logs, 16); // op realiada con exito
         }
         else if (cod == 3) // seteo el puerto de bitacora
         {
             short dato = in(ENTRADA);
-            PUERTO_LOG_DEFECTO = dato;
-            out(PUERTO_LOG_DEFECTO, 16); // op realiada con exito
+            out(port_logs, dato); // mando a la bitacora el parametro
+
+            port_logs = dato;
+            out(port_logs, 16); // op realiada con exito
         }
         else if (cod == 4) // muestro tope de pila en puerto de salida sin perderlo
         {
             if (posPila >= 0)
             {
                 short dato = MEM[posPila];
-                out(PUERTO_SALIDA_DEFECTO, dato);
-                out(PUERTO_LOG_DEFECTO, 16); // op realiada con exito
+                out(port_exit, dato);
+                out(port_logs, 16); // op realiada con exito
             }
             else
-                out(PUERTO_LOG_DEFECTO, 8); // error: falta de operandos
+                out(port_logs, 8); // error: falta de operandos
         }
         else if (cod == 5) // muestro la pila en puerto salida sin perderla
         {
-            if (posPila > -1)
+            short i = posPila;
+
+            while (i > -1)
             {
-                short i = posPila;
-                do
-                {
-                    out(PUERTO_SALIDA_DEFECTO, MEM[i]);
-                    i--;
-                } while (i > -1);
-                out(PUERTO_LOG_DEFECTO, 16); // op realiada con exito
+                out(port_exit, MEM[i]);
+                i--;
             }
-            else
-                out(PUERTO_LOG_DEFECTO, 8); // error: falta de operandos
+            out(port_logs, 16); // op realiada con exito
         }
         else if (cod == 6) // Duplico el tope de la pila: insert_pila(tope_pila);
         {
@@ -111,13 +102,13 @@ int main()
                     short i = posPila - 1;
                     MEM[posPila] = MEM[i];
                     posPila++;
-                    out(PUERTO_LOG_DEFECTO, 16); // op realiada con exito
+                    out(port_logs, 16); // op realiada con exito
                 }
                 else
-                    out(PUERTO_LOG_DEFECTO, 8); // falta de operandos
+                    out(port_logs, 8); // falta de operandos
             }
             else
-                out(PUERTO_LOG_DEFECTO, 4); // overflow en la pila
+                out(port_logs, 4); // overflow en la pila
         }
         else if (cod == 7) // shortercambiar tope de la pila con el elem debajo
         {
@@ -130,10 +121,10 @@ int main()
                 MEM[i] = aux2;
                 MEM[j] = aux1;
 
-                out(PUERTO_LOG_DEFECTO, 16); // op realiada con exito
+                out(port_logs, 16); // op realiada con exito
             }
             else
-                out(PUERTO_LOG_DEFECTO, 8); // falta de operandos
+                out(port_logs, 8); // falta de operandos
         }
         else if (cod == 8) // Calculo el opuesto
         {
@@ -142,10 +133,10 @@ int main()
                 short num = -MEM[posPila];
                 MEM[posPila] = num;
 
-                out(PUERTO_LOG_DEFECTO, 16); // op realiada con exito
+                out(port_logs, 16); // op realiada con exito
             }
             else
-                out(PUERTO_LOG_DEFECTO, 8); // falta de operandos
+                out(port_logs, 8); // falta de operandos
         }
         else if (cod == 9) // calculo factorial de forma recursiva
         {
@@ -154,10 +145,10 @@ int main()
                 short num = MEM[posPila];
                 num = fact(num);
                 MEM[posPila] = num;
-                out(PUERTO_LOG_DEFECTO, 16); // op realiada con exito
+                out(port_logs, 16); // op realiada con exito
             }
             else
-                out(PUERTO_LOG_DEFECTO, 8); // falta de operandos
+                out(port_logs, 8); // falta de operandos
         }
         else if (cod == 10) // Sumatoria de los elem de la pila y solo queda el resu en ella
         {
@@ -171,11 +162,11 @@ int main()
                 } while (posPila >= 0);
                 posPila++;
                 MEM[posPila] = sum;
-                out(PUERTO_SALIDA_DEFECTO, sum); // muestro la suma
-                out(PUERTO_LOG_DEFECTO, 16);     // op realiada con exito
+                out(port_exit, sum); // muestro la suma
+                out(port_logs, 16);  // op realiada con exito
             }
             else
-                out(PUERTO_LOG_DEFECTO, 8); // falta de operandos
+                out(port_logs, 8); // falta de operandos
         }
         else if (cod > 10 && cod < 20)
         {
@@ -223,10 +214,13 @@ int main()
                     res = n2 >> n1;
                 }
                 MEM[posPila] = res;
-                out(PUERTO_LOG_DEFECTO, 16); // op realiada con exito
+                out(port_logs, 16); // op realiada con exito
             }
             else
-                out(PUERTO_LOG_DEFECTO, 8);
+            {
+                out(port_logs, 8); // falta de operandos
+                posPila--;         // se debe eliminar el operando de la pila
+            }
         }
         else if (cod == 254) // vaciar pila
         {
@@ -234,15 +228,17 @@ int main()
             {
                 while (posPila > -1)
                     posPila--;
-                out(PUERTO_LOG_DEFECTO, 16); // op realiada con exito
+                out(port_logs, 16); // op realiada con exito
             }
             else
-                out(PUERTO_LOG_DEFECTO, 8); // falta de operandos
+                out(port_logs, 8); // falta de operandos
         }
         else
-            out(PUERTO_SALIDA_DEFECTO, 2); // comando invalido
+            out(port_logs, 2); // comando invalido
+
         cod = in(ENTRADA);
     }
 
+    out(PUERTO_LOG_DEFECTO, 16); // se termina de leer la entrada con exito
     return 0;
 }
